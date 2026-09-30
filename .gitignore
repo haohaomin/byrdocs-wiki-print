@@ -3,3 +3,6 @@ dist/
 release/*.zip
 *.log
 .DS_Store
+
+.playwright-cli/
+output/

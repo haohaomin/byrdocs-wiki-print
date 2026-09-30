@@ -6,7 +6,8 @@ function findPrecedingHeadings(el: Element): { section: string; subsection: stri
     el.closest(".exam-page-main") ||
     el.closest(".wiki-content") ||
     document.body;
-  const headings = root.querySelectorAll("h1, h2, h3, h4, h5, h6");
+  const headings = Array.from(root.querySelectorAll("h1, h2, h3, h4, h5, h6"))
+    .filter((heading) => !heading.closest(".exam-solution, .related-exams"));
   let section = "";
   let subsection = "";
 
@@ -74,7 +75,12 @@ function buildLocalAnswerLabel(
 ): { label: string; sort: number | null } {
   if (el.classList.contains("exam-choices")) {
     const choiceText = (el.querySelector(".exam-choices-item")?.textContent || "").trim();
-    if (choiceText) return { label: choiceText, sort: null };
+    if (choiceText) {
+      const number = choiceText.match(/^第\s*(\d+)\s*题$/)?.[1];
+      return number
+        ? { label: `${number}.`, sort: Number(number) }
+        : { label: choiceText, sort: null };
+    }
   }
   const headings = findPrecedingHeadings(el);
   if (headings.subsection) {
@@ -188,7 +194,8 @@ function collectQuestionNumbersInRange(
 ): number[] {
   const nums: number[] = [];
   root.querySelectorAll("ol").forEach((ol) => {
-    if (ol.closest(".related-exams")) return;
+    if (ol.closest(".related-exams, .exam-solution, .exam-choices")) return;
+    if (ol.parentElement?.closest("ol, ul")) return;
     if (!isElementAfter(ol, startEl)) return;
     if (endEl && !isElementBefore(ol, endEl)) return;
     let start = Number.parseInt(ol.getAttribute("start") || "1", 10);
@@ -207,7 +214,7 @@ function collectSubsectionHeadingsInRange(
   endEl: Element | null,
 ): Element[] {
   return Array.from(root.querySelectorAll("h3")).filter((heading) => {
-    if (heading.closest(".related-exams")) return false;
+    if (heading.closest(".related-exams, .exam-solution")) return false;
     if (!isElementAfter(heading, startEl)) return false;
     if (endEl && !isElementBefore(heading, endEl)) return false;
     return !!(heading.textContent || "").trim();
@@ -234,10 +241,11 @@ export function buildPrintAnswersAppendix(): HTMLElement | null {
     root.querySelectorAll(
       ".exam-blank[aria-pressed], .exam-choices[data-has-answer='true'], .exam-solution",
     ),
-  ).filter((el) => !el.closest(".related-exams") && !el.closest(".print-answers-appendix"));
+  ).filter((el) => !el.closest(".related-exams, .print-answers-appendix") &&
+    !el.parentElement?.closest(".exam-solution"));
 
   const sectionHeadings = Array.from(root.querySelectorAll("h2")).filter(
-    (el) => !el.closest(".related-exams"),
+    (el) => !el.closest(".related-exams, .exam-solution"),
   );
 
   const appendix = document.createElement("section");

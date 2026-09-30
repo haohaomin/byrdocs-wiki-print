@@ -9,89 +9,52 @@ import {
 
 /** Print dialog, handlers, and answer reveal logic for BYR Docs Wiki exam pages. */
 
+// Register at document_start, before upstream registers its Window listeners.
+// Window print events target Window itself; capture alone does not reliably
+// reorder listeners already installed by the page.
+let beforePrintHandler: ((event: Event) => void) | undefined;
+let afterPrintHandler: ((event: Event) => void) | undefined;
+window.addEventListener("beforeprint", (event) => beforePrintHandler?.(event), true);
+window.addEventListener("afterprint", (event) => afterPrintHandler?.(event), true);
+
 type AnswerPlacement = "inline" | "end";
 
 interface PrePrintState {
-  blanks: Element[];
-  solutions: Element[];
-  choices: Element[];
-  withAnswers: boolean;
-  placement: AnswerPlacement;
-  wasHidden?: boolean;
+  solutions: { el: HTMLDetailsElement; open: boolean }[];
+  inputs: { el: HTMLInputElement; checked: boolean }[];
+  attributes: { el: Element; name: string; value: string | null }[];
 }
 
-interface RemovedPrintInfoNode {
-  el: HTMLElement;
-  parent: Node;
-  nextSibling: Node | null;
-}
+// Work only with shared DOM: extension content scripts cannot access the site's
+// window.__examState because Chrome runs them in an isolated world.
+function prepareAnswers(withAnswers: boolean, placement: AnswerPlacement): PrePrintState {
+  const root = document.querySelector(".exam-page-main")!;
+  const state: PrePrintState = { solutions: [], inputs: [], attributes: [] };
+  if (!withAnswers || placement === "end") return state;
 
-let removedPrintInfoNodes: RemovedPrintInfoNode[] = [];
-
-function shouldPrintExamInfo(): boolean {
-  return document.documentElement.dataset.bdwpPrintInfo === "true";
-}
-
-function isExamInfoAside(el: Element): boolean {
-  if (!(el instanceof HTMLElement) || el.tagName !== "ASIDE") return false;
-  const heading = el.querySelector(".border-b p, .border-b h2, .border-b h3");
-  return (heading?.textContent || "").trim() === "试题信息";
-}
-
-function getExamInfoElements(): HTMLElement[] {
-  const elements: HTMLElement[] = [];
-  const seen = new Set<HTMLElement>();
-
-  const add = (el: Element | null | undefined): void => {
-    if (!(el instanceof HTMLElement) || seen.has(el)) return;
-    seen.add(el);
-    elements.push(el);
-  };
-
-  add(document.getElementById("examInfoBox"));
-  document.querySelectorAll(".exam-info-box").forEach(add);
-
-  // Production wiki.byrdocs.org (upstream) InfoBox has no id/class hook.
-  document.querySelectorAll(".exam-page-main > aside").forEach((el) => {
-    if (isExamInfoAside(el)) add(el);
+  root.querySelectorAll<HTMLDetailsElement>(".exam-solution").forEach((el) => {
+    state.solutions.push({ el, open: el.open });
+    el.open = true;
   });
-
-  return elements;
-}
-
-function hideExamInfoForPrint(): void {
-  removedPrintInfoNodes = [];
-  getExamInfoElements().forEach((el) => {
-    const parent = el.parentNode;
-    if (!parent) return;
-    removedPrintInfoNodes.push({
-      el,
-      parent,
-      nextSibling: el.nextSibling,
-    });
-    el.remove();
-  });
-}
-
-function restoreExamInfoAfterPrint(): void {
-  removedPrintInfoNodes.forEach(({ el, parent, nextSibling }) => {
-    if (el.isConnected) return;
-    if (nextSibling && nextSibling.parentNode === parent) {
-      parent.insertBefore(el, nextSibling);
-    } else {
-      parent.appendChild(el);
+  root.querySelectorAll(".exam-choice-option").forEach((el) => {
+    state.attributes.push({ el, name: "class", value: el.getAttribute("class") });
+    el.classList.remove("is-correct", "is-wrong", "is-missed");
+    const input = el.querySelector<HTMLInputElement>(".exam-choice-input");
+    if (input) {
+      state.inputs.push({ el: input, checked: input.checked });
+      input.checked = el.getAttribute("data-answer") === "true";
     }
   });
-  removedPrintInfoNodes = [];
+  return state;
 }
 
-interface ExamStateController {
-  getAllShown?: () => boolean;
-  toggleAll?: () => void;
-}
-
-function getExamState(): ExamStateController | undefined {
-  return (window as Window & { __examState?: ExamStateController }).__examState;
+function restoreAnswers(state: PrePrintState): void {
+  state.solutions.forEach(({ el, open }) => { el.open = open; });
+  state.inputs.forEach(({ el, checked }) => { el.checked = checked; });
+  state.attributes.forEach(({ el, name, value }) => {
+    if (value === null) el.removeAttribute(name);
+    else el.setAttribute(name, value);
+  });
 }
 
 function createDialog(): HTMLDialogElement {
@@ -135,86 +98,6 @@ function createDialog(): HTMLDialogElement {
   return dialog;
 }
 
-function revealAllAnswers(prePrintState: PrePrintState): void {
-  const examState = getExamState();
-  if (!examState?.getAllShown?.()) {
-    examState?.toggleAll?.();
-    prePrintState.wasHidden = true;
-  }
-
-  document.querySelectorAll(".exam-solution:not([open])").forEach((el) => {
-    el.setAttribute("open", "");
-    prePrintState.solutions.push(el);
-  });
-
-  document
-    .querySelectorAll(".exam-blank[aria-pressed='false']")
-    .forEach((el) => {
-      el.setAttribute("aria-pressed", "true");
-      prePrintState.blanks.push(el);
-    });
-
-  document
-    .querySelectorAll(
-      ".exam-choices[data-has-answer='true'][data-revealed='false']",
-    )
-    .forEach((group) => {
-      group.querySelectorAll(".exam-choice-option").forEach((opt) => {
-        if (opt.getAttribute("data-answer") === "true") {
-          opt.classList.add("is-correct");
-          const input = opt.querySelector<HTMLInputElement>(
-            ".exam-choice-input",
-          );
-          if (input) input.checked = true;
-        }
-      });
-      group.setAttribute("data-revealed", "true");
-      prePrintState.choices.push(group);
-    });
-}
-
-/** Collapse revealed answers on the original paper when answers print in the appendix. */
-function collapseInlineAnswersForEndPrint(): void {
-  document.querySelectorAll(".exam-solution[open]").forEach((el) => {
-    el.removeAttribute("open");
-  });
-
-  document
-    .querySelectorAll(".exam-blank[aria-pressed='true']")
-    .forEach((el) => {
-      el.setAttribute("aria-pressed", "false");
-    });
-
-  document
-    .querySelectorAll(".exam-choices[data-revealed='true']")
-    .forEach((group) => {
-      group.setAttribute("data-revealed", "false");
-      group.querySelectorAll(".exam-choice-option").forEach((opt) => {
-        opt.classList.remove("is-correct", "is-wrong", "is-missed");
-        const input = opt.querySelector<HTMLInputElement>(".exam-choice-input");
-        if (input) input.checked = false;
-      });
-    });
-}
-
-function restoreAnswers(prePrintState: PrePrintState): void {
-  if (prePrintState.wasHidden) {
-    getExamState()?.toggleAll?.();
-  }
-  prePrintState.solutions.forEach((el) => el.removeAttribute("open"));
-  prePrintState.blanks.forEach((el) =>
-    el.setAttribute("aria-pressed", "false"),
-  );
-  prePrintState.choices.forEach((group) => {
-    group.querySelectorAll(".exam-choice-option").forEach((opt) => {
-      opt.classList.remove("is-correct");
-      const input = opt.querySelector<HTMLInputElement>(".exam-choice-input");
-      if (input) input.checked = false;
-    });
-    group.setAttribute("data-revealed", "false");
-  });
-}
-
 export function mountPrintFeature(): void {
   if (document.getElementById("bdwpPrintDialog")) return;
   if (!document.querySelector(".exam-page-main")) return;
@@ -239,6 +122,10 @@ export function mountPrintFeature(): void {
 
   let printAnswersAppendix: HTMLElement | null = null;
   let prePrintState: PrePrintState | null = null;
+  let takeoverEnabled = true;
+  let printRequested = false;
+  let suppressSolutionToggle = false;
+  let toggleCleanup: number | undefined;
   let printWithAnswers = true;
   let printWithInfo = false;
   let printAnswerPlacement: AnswerPlacement = "end";
@@ -285,7 +172,8 @@ export function mountPrintFeature(): void {
   };
 
   const syncPrintTakeover = async () => {
-    applyPrintTakeover(await getTakeoverPrint(), openDialog);
+    takeoverEnabled = await getTakeoverPrint();
+    applyPrintTakeover(takeoverEnabled, openDialog);
   };
 
   const closeDialog = () => {
@@ -300,16 +188,14 @@ export function mountPrintFeature(): void {
     printWithAnswers = withAnswers;
     printWithInfo = withInfo;
     printAnswerPlacement = withAnswers ? placement : "inline";
-    document.documentElement.dataset.printAnswers = withAnswers ? "true" : "false";
-    document.documentElement.dataset.printInfo = withInfo ? "true" : "false";
-    document.documentElement.dataset.bdwpPrintInfo = withInfo ? "true" : "false";
-    if (withAnswers) {
-      document.documentElement.dataset.printAnswerPlacement = placement;
-    } else {
-      delete document.documentElement.dataset.printAnswerPlacement;
-    }
+    printRequested = true;
     closeDialog();
-    window.print();
+    try {
+      window.print();
+    } catch (error) {
+      finishPrint();
+      throw error;
+    }
   };
 
   mountPrintButton(openDialog);
@@ -326,60 +212,55 @@ export function mountPrintFeature(): void {
     });
   });
 
-  window.addEventListener("beforeprint", () => {
-    const withAnswers =
-      document.documentElement.dataset.printAnswers !== "false";
-    const placement =
-      document.documentElement.dataset.printAnswerPlacement === "end"
-        ? "end"
-        : "inline";
-    printWithAnswers = withAnswers;
-    printAnswerPlacement = withAnswers ? placement : "inline";
+  // Opening details queues a toggle event. Prevent the site's persistence
+  // handler from saving temporary print state, including the restoring toggle.
+  document.addEventListener("toggle", (event) => {
+    if (suppressSolutionToggle && event.target instanceof Element &&
+        event.target.matches(".exam-solution")) {
+      event.stopImmediatePropagation();
+    }
+  }, true);
 
-    prePrintState = {
-      blanks: [],
-      solutions: [],
-      choices: [],
-      withAnswers,
-      placement,
-    };
+  const finishPrint = (): void => {
+    printAnswersAppendix?.remove();
+    printAnswersAppendix = null;
+    if (prePrintState) restoreAnswers(prePrintState);
+    prePrintState = null;
+    printRequested = false;
+    delete document.documentElement.dataset.bdwpPrintActive;
+    delete document.documentElement.dataset.printAnswers;
+    delete document.documentElement.dataset.printAnswerPlacement;
+    delete document.documentElement.dataset.bdwpPrintInfo;
+    toggleCleanup = window.setTimeout(() => { suppressSolutionToggle = false; }, 0);
+  };
 
-    if (withAnswers && placement === "end") {
+  beforePrintHandler = (event) => {
+    if (!document.querySelector(".exam-page-main")) return;
+    if (!printRequested && !takeoverEnabled) return;
+    // Only one implementation may prepare/restore this print.
+    event.stopImmediatePropagation();
+    if (prePrintState) return;
+    window.clearTimeout(toggleCleanup);
+    suppressSolutionToggle = true;
+    const html = document.documentElement;
+    html.dataset.bdwpPrintActive = "true";
+    html.dataset.printAnswers = String(printWithAnswers);
+    html.dataset.printAnswerPlacement = printAnswerPlacement;
+    html.dataset.bdwpPrintInfo = String(printWithInfo);
+    prePrintState = prepareAnswers(printWithAnswers, printAnswerPlacement);
+    if (printWithAnswers && printAnswerPlacement === "end") {
       printAnswersAppendix = buildPrintAnswersAppendix();
       if (printAnswersAppendix) {
         document.querySelector(".wiki-content")?.appendChild(printAnswersAppendix);
       }
-      // Run after the main site beforeprint handler, which reveals inline answers.
-      collapseInlineAnswersForEndPrint();
-    } else if (withAnswers) {
-      revealAllAnswers(prePrintState);
     }
+  };
 
-    document.querySelectorAll(".print-footer").forEach((el) => {
-      el.remove();
-    });
-
-    if (!shouldPrintExamInfo()) {
-      hideExamInfoForPrint();
-    }
-  });
-
-  window.addEventListener("afterprint", () => {
-    restoreExamInfoAfterPrint();
-    printAnswersAppendix?.remove();
-    printAnswersAppendix = null;
-
-    delete document.documentElement.dataset.printAnswers;
-    delete document.documentElement.dataset.printAnswerPlacement;
-    delete document.documentElement.dataset.printInfo;
-    delete document.documentElement.dataset.bdwpPrintInfo;
-
+  afterPrintHandler = (event) => {
     if (!prePrintState) return;
-    if (prePrintState.withAnswers && prePrintState.placement !== "end") {
-      restoreAnswers(prePrintState);
-    }
-    prePrintState = null;
-  });
+    event.stopImmediatePropagation();
+    finishPrint();
+  };
 
   printAnswersInput?.addEventListener("change", syncPrintAnswerPlacementEnabled);
   cancelButton?.addEventListener("click", closeDialog);

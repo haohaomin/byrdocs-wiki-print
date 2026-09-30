@@ -50,7 +50,7 @@ function init(): void {
   maybeStopObserver(observer);
 }
 
-observer.observe(document.documentElement, { childList: true, subtree: true });
+observer.observe(document, { childList: true, subtree: true });
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init, { once: true });

@@ -25,7 +25,7 @@
 | 答案位置 | 统一放在最后 |
 | 仅扩展接管打印 | 勾选 |
 
-上次选择会记住，下次打开对话框时沿用。
+同一页面内会沿用上次打印选项；「接管打印」设置会持久保存。
 
 ## 答案放在最后时
 
@@ -83,9 +83,23 @@ Firefox：`about:debugging` →「临时载入附加组件」→ 选择 `dist/ma
 ## 开发
 
 ```bash
+npm run check    # TypeScript 类型检查
 npm run watch    # 监听源码，自动构建到 dist/
 npm run package  # 构建并打包 release/byrdocs-wiki-print-v<version>.zip
 ```
+
+### 浏览器回归验证
+
+构建后使用 Playwright CLI 在独立的测试浏览器中验证线上试卷（需要网络）：
+
+```bash
+npx --yes --package @playwright/cli playwright-cli open about:blank
+npm run check:print
+# 也可验证本地 byrdocs-neowiki（先在该仓库启动 npm run dev）
+node scripts/check-print.mjs 'http://127.0.0.1:4321/exam/24-25-1-数据结构-期末/'
+```
+
+检查脚本在 Chrome 隔离环境中提前注入扩展，验证答案置后、答案内联、不打印答案、概要开关、快捷键、重复打印事件和打印前后的答题进度恢复。截图及日志保存在 `output/playwright/`。检查使用打印媒体模拟和打印生命周期事件，不操作系统打印机。
 
 ### 项目结构
 
@@ -127,10 +141,21 @@ PR 也会打包并上传 artifact，但不会创建 Release。
 | `.wiki-content` | 挂载答案附录 |
 | `#examInfoBox` / `.exam-page-main > aside` | 试题概要（线上版无 id，扩展兼容两种结构） |
 | `.exam-blank`、`.exam-solution`、`.exam-choices` | 答案收集与显示控制 |
-| `window.__examState` | 展开/收起全部答案 |
+| `beforeprint` / `afterprint` | 在 `document_start` 注册，统一准备和恢复扩展打印状态 |
 | `#examToolbarActions` | 打印按钮默认停靠位置 |
 
 主站 [byrdocs-neowiki](https://github.com/byrdocs/byrdocs-neowiki) 的 DOM 或打印逻辑发生较大变更时，可能需要更新扩展。
+
+## 0.1.1 兼容更新
+
+- 兼容上游无条件展开答案的打印处理，以及本地带打印对话框的版本。
+- 提前注册打印事件，避免主站与扩展重复修改答案；不再依赖内容脚本无法访问的 `window.__examState`。
+- 不打印答案时消除正确选项的边框和标记，隐藏填空答案时保留书写空间。
+- 隐藏目录面板并消除目录侧栏留白；打印或取消后保留原来的选择、解析展开状态和答题记录。
+- 答案附录不再把解析中的标题、编号列表识别为题目；支持选择题显式题号。
+- 关闭接管后，主站打印沿用原行为，扩展按钮仍可单独使用。
+
+更新后请在扩展管理页重新加载扩展，并刷新已打开的试卷页。
 
 ## 常见问题
 

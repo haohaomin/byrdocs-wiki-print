@@ -1,76 +1,83 @@
 /* Print layout overrides injected by the extension. */
 
 @media print {
-  @page {
-    margin: 2cm 1.5cm;
-  }
-
-  #examToolbar,
-  #examPrintDialog,
   #bdwpPrintDialog,
   .bdwp-print-control {
     display: none !important;
   }
 
-  nav,
-  footer {
+  @page {
+    margin: 2cm 1.5cm;
+  }
+
+  html[data-bdwp-print-active="true"] #examTocShell,
+  html[data-bdwp-print-active="true"] #examTocMobile,
+  html[data-bdwp-print-active="true"] #examToolbar,
+  html[data-bdwp-print-active="true"] #examPrintDialog,
+  html[data-bdwp-print-active="true"] #bdwpPrintDialog,
+  html[data-bdwp-print-active="true"] .bdwp-print-control {
     display: none !important;
   }
 
-  html:not([data-bdwp-print-info="true"]) #examInfoBox,
-  html:not([data-bdwp-print-info="true"]) .exam-info-box,
-  html:not([data-bdwp-print-info="true"]) .exam-page-main > aside {
+  html[data-bdwp-print-active="true"] nav,
+  html[data-bdwp-print-active="true"] footer {
     display: none !important;
   }
 
-  html[data-bdwp-print-info="true"] #examInfoBox,
-  html[data-bdwp-print-info="true"] .exam-info-box,
-  html[data-bdwp-print-info="true"] .exam-page-main > aside {
+  html[data-bdwp-print-active="true"]:not([data-bdwp-print-info="true"]) #examInfoBox,
+  html[data-bdwp-print-active="true"]:not([data-bdwp-print-info="true"]) .exam-info-box,
+  html[data-bdwp-print-active="true"]:not([data-bdwp-print-info="true"]) .exam-page-main > aside {
+    display: none !important;
+  }
+
+  html[data-bdwp-print-active="true"][data-bdwp-print-info="true"] #examInfoBox,
+  html[data-bdwp-print-active="true"][data-bdwp-print-info="true"] .exam-info-box,
+  html[data-bdwp-print-active="true"][data-bdwp-print-info="true"] .exam-page-main > aside {
     display: block !important;
   }
 
-  .related-exams {
+  html[data-bdwp-print-active="true"] .related-exams {
     display: none !important;
   }
 
-  html .print-footer {
+  html[data-bdwp-print-active="true"] .print-footer {
     display: none !important;
   }
 
-  .exam-blank {
+  html[data-bdwp-print-active="true"] .exam-blank {
     background: transparent !important;
     min-width: 0 !important;
   }
 
-  .exam-blank-placeholder {
+  html[data-bdwp-print-active="true"] .exam-blank-placeholder {
     display: none !important;
   }
 
-  .exam-blank[aria-pressed="true"].exam-blank,
-  .exam-blank[aria-pressed="false"].exam-blank {
+  html[data-bdwp-print-active="true"] .exam-blank[aria-pressed="true"].exam-blank,
+  html[data-bdwp-print-active="true"] .exam-blank[aria-pressed="false"].exam-blank {
     background: transparent !important;
     border-radius: 0 !important;
     box-shadow: 0 1px 0 0 #999 !important;
   }
 
-  .exam-choices-submit {
+  html[data-bdwp-print-active="true"] .exam-choices-submit {
     display: none !important;
   }
 
-  .exam-choice-option {
+  html[data-bdwp-print-active="true"] .exam-choice-option {
     border-color: transparent !important;
     box-shadow: none !important;
     padding: 0.2em 0.5em !important;
   }
 
-  .print-answers-appendix {
+  html[data-bdwp-print-active="true"] .print-answers-appendix {
     break-before: page;
     display: block !important;
     margin-top: 0;
     padding-top: 0;
   }
 
-  .print-answers-appendix-title {
+  html[data-bdwp-print-active="true"] .print-answers-appendix-title {
     border-bottom: 1.5px solid #ccc;
     font-size: 1.25em;
     font-weight: 700;
@@ -78,17 +85,17 @@
     padding-bottom: 0.4em;
   }
 
-  .print-answer-section {
+  html[data-bdwp-print-active="true"] .print-answer-section {
     margin: 0 0 1.35em;
   }
 
-  .print-answer-section-title {
+  html[data-bdwp-print-active="true"] .print-answer-section-title {
     font-size: 1.08em;
     font-weight: 700;
     margin: 0 0 0.55em;
   }
 
-  .print-answer-item {
+  html[data-bdwp-print-active="true"] .print-answer-item {
     break-inside: avoid;
     display: grid;
     gap: 0.15em 0.75em;
@@ -96,74 +103,87 @@
     margin: 0 0 0.45em;
   }
 
-  .print-answer-item.is-section-empty {
+  html[data-bdwp-print-active="true"] .print-answer-item.is-section-empty {
     grid-template-columns: 1fr;
   }
 
-  .print-answer-label {
+  html[data-bdwp-print-active="true"] .print-answer-label {
     font-weight: 600;
     line-height: 1.7;
   }
 
-  .print-answer-body {
+  html[data-bdwp-print-active="true"] .print-answer-body {
     line-height: 1.7;
     min-width: 0;
   }
 
-  .print-answer-body > :first-child {
+  html[data-bdwp-print-active="true"] .print-answer-body > :first-child {
     margin-top: 0;
   }
 
-  .print-answer-body > :last-child {
+  html[data-bdwp-print-active="true"] .print-answer-body > :last-child {
     margin-bottom: 0;
   }
 
+  html[data-bdwp-print-active="true"] .layout-shell[data-has-exam-toc="true"] {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Keep a writing space even when no answer has been supplied. */
+  html[data-bdwp-print-active="true"] .exam-blank.is-disabled {
+    color: transparent !important;
+    min-width: 6em !important;
+    box-shadow: 0 1px 0 0 #999 !important;
+  }
+
   /* Answers inline */
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-blank-answer {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-blank-answer {
     visibility: visible !important;
   }
 
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution {
     break-inside: avoid;
     border: 1.5px solid #ccc !important;
     border-radius: 12px !important;
   }
 
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution[open],
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution:not([open]) {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution[open],
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution:not([open]) {
     overflow: visible !important;
   }
 
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution-summary {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution-summary {
     display: none !important;
   }
 
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution-content {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-solution-content {
     display: block !important;
     padding: 1em 1.2em !important;
   }
 
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option[data-answer="true"] {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option[data-answer="true"] {
     border-radius: 8px !important;
     outline: 1px solid #000 !important;
     outline-offset: -2px;
   }
 
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option.is-correct .exam-choice-indicator,
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option.is-correct .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator {
     border-color: #000 !important;
     border-width: 2px !important;
   }
 
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option.is-correct .exam-choice-indicator::after,
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator::after {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option.is-correct .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator::after {
     background: #000 !important;
     content: "" !important;
     inset: 1.5px !important;
     position: absolute !important;
   }
 
-  html[data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices.single .exam-choice-option[data-answer="true"] .exam-choice-indicator::after {
+  html[data-bdwp-print-active="true"][data-print-answers="true"]:not([data-print-answer-placement="end"]) .exam-choices.single .exam-choice-option[data-answer="true"] .exam-choice-indicator::after {
     border-radius: 50% !important;
   }
 
@@ -172,61 +192,61 @@
    * Use html[data-print-answers="true"][data-print-answer-placement="end"] so
    * specificity beats the main site ExamToolbar rule that forces answers visible.
    */
-  html[data-print-answers="false"] .exam-blank-answer,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-blank-answer,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-blank[aria-pressed="true"] .exam-blank-answer {
-    display: none !important;
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-blank-answer,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-blank-answer,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-blank[aria-pressed="true"] .exam-blank-answer {
     visibility: hidden !important;
   }
 
-  html[data-print-answers="false"] .exam-solution,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-solution,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-solution[open],
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-solution:not([open]) {
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-solution,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-solution,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-solution[open],
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-solution:not([open]) {
     display: none !important;
   }
 
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-solution-summary,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-solution-content {
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-solution-summary,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-solution-content {
     display: none !important;
   }
 
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-correct,
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-wrong,
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-missed,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-correct,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-wrong,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-missed,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option[data-answer="true"] {
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option[data-answer="true"],
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-correct,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-wrong,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-missed,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-correct,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-wrong,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-missed,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option[data-answer="true"] {
     background: transparent !important;
     border-color: transparent !important;
     outline: none !important;
   }
 
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-correct .exam-choice-indicator,
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-wrong .exam-choice-indicator,
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-missed .exam-choice-indicator,
-  html[data-print-answers="false"] .exam-choices .exam-choice-input:checked + .exam-choice-indicator,
-  html[data-print-answers="false"] .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-correct .exam-choice-indicator,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-wrong .exam-choice-indicator,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-missed .exam-choice-indicator,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-input:checked + .exam-choice-indicator,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator {
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-correct .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-wrong .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-missed .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-input:checked + .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-correct .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-wrong .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-missed .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-input:checked + .exam-choice-indicator,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator {
     border-color: #9ca3af !important;
     border-width: 1.5px !important;
   }
 
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-correct .exam-choice-indicator::after,
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-wrong .exam-choice-indicator::after,
-  html[data-print-answers="false"] .exam-choices .exam-choice-option.is-missed .exam-choice-indicator::after,
-  html[data-print-answers="false"] .exam-choices .exam-choice-input:checked + .exam-choice-indicator::after,
-  html[data-print-answers="false"] .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator::after,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-correct .exam-choice-indicator::after,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-wrong .exam-choice-indicator::after,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-missed .exam-choice-indicator::after,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-input:checked + .exam-choice-indicator::after,
-  html[data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator::after {
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-correct .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-wrong .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option.is-missed .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-input:checked + .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="false"] .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-correct .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-wrong .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option.is-missed .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-input:checked + .exam-choice-indicator::after,
+  html[data-bdwp-print-active="true"][data-print-answers="true"][data-print-answer-placement="end"] .exam-choices .exam-choice-option[data-answer="true"] .exam-choice-indicator::after {
     content: none !important;
   }
 }
