@@ -123,27 +123,17 @@ function isElementBefore(el: Element, marker: Element): boolean {
 
 function createPrintAnswerItem(
   labelText: string,
-  bodyNode: HTMLElement | string,
-  options?: { emptySection?: boolean },
+  body: HTMLElement,
 ): HTMLElement {
   const item = document.createElement("div");
   item.className = "print-answer-item";
-  if (options?.emptySection) item.classList.add("is-section-empty");
   if (labelText) {
     const label = document.createElement("div");
     label.className = "print-answer-label";
     label.textContent = labelText;
     item.appendChild(label);
   }
-  let body: HTMLElement;
-  if (bodyNode instanceof HTMLElement) {
-    body = bodyNode;
-    body.className = "print-answer-body";
-  } else {
-    body = document.createElement("div");
-    body.className = "print-answer-body";
-    body.textContent = bodyNode;
-  }
+  body.className = "print-answer-body";
   item.appendChild(body);
   return item;
 }
@@ -185,40 +175,6 @@ function buildAnswerBodyFromSource(source: Element): HTMLElement | null {
     return body;
   }
   return null;
-}
-
-function collectQuestionNumbersInRange(
-  root: Element,
-  startEl: Element,
-  endEl: Element | null,
-): number[] {
-  const nums: number[] = [];
-  root.querySelectorAll("ol").forEach((ol) => {
-    if (ol.closest(".related-exams, .exam-solution, .exam-choices")) return;
-    if (ol.parentElement?.closest("ol, ul")) return;
-    if (!isElementAfter(ol, startEl)) return;
-    if (endEl && !isElementBefore(ol, endEl)) return;
-    let start = Number.parseInt(ol.getAttribute("start") || "1", 10);
-    if (!Number.isFinite(start)) start = 1;
-    const items = Array.from(ol.children).filter((child) => child.tagName === "LI");
-    items.forEach((_item, index) => {
-      nums.push(start + index);
-    });
-  });
-  return Array.from(new Set(nums)).sort((a, b) => a - b);
-}
-
-function collectSubsectionHeadingsInRange(
-  root: Element,
-  startEl: Element,
-  endEl: Element | null,
-): Element[] {
-  return Array.from(root.querySelectorAll("h3")).filter((heading) => {
-    if (heading.closest(".related-exams, .exam-solution")) return false;
-    if (!isElementAfter(heading, startEl)) return false;
-    if (endEl && !isElementBefore(heading, endEl)) return false;
-    return !!(heading.textContent || "").trim();
-  });
 }
 
 function createAnswerSection(titleText: string): HTMLElement {
@@ -318,69 +274,26 @@ export function buildPrintAnswersAppendix(): HTMLElement | null {
       }
     });
 
-    let expectedNumbers = collectQuestionNumbersInRange(root, heading, nextHeading);
-    const numberedKeys = Object.keys(numberedEntries)
+    // Only print answers supplied by the source. Filling gaps with placeholders
+    // creates entire answer pages for exams which have no answers at all.
+    Object.keys(numberedEntries)
       .map(Number)
-      .sort((a, b) => a - b);
-    if (!expectedNumbers.length && numberedKeys.length) {
-      const maxNum = numberedKeys[numberedKeys.length - 1];
-      const minNum = numberedKeys[0];
-      for (let n = minNum; n <= maxNum; n += 1) expectedNumbers.push(n);
-    }
-
-    if (expectedNumbers.length) {
-      expectedNumbers.forEach((num) => {
-        const entries = numberedEntries[num];
-        if (entries?.length) {
-          entries.forEach((entry) => {
-            itemCount += 1;
-            section.appendChild(createPrintAnswerItem(entry.label, entry.body));
-          });
-          delete numberedEntries[num];
-        } else {
-          itemCount += 1;
-          section.appendChild(createPrintAnswerItem(`${num}.`, "暂无答案"));
-        }
-      });
-      Object.keys(numberedEntries)
-        .map(Number)
-        .sort((a, b) => a - b)
-        .forEach((num) => {
-          numberedEntries[num].forEach((entry) => {
-            itemCount += 1;
-            section.appendChild(createPrintAnswerItem(entry.label, entry.body));
-          });
-        });
-    } else {
-      numberedKeys.forEach((num) => {
+      .sort((a, b) => a - b)
+      .forEach((num) => {
         numberedEntries[num].forEach((entry) => {
           itemCount += 1;
           section.appendChild(createPrintAnswerItem(entry.label, entry.body));
         });
       });
-    }
 
     otherEntries.forEach((entry) => {
       itemCount += 1;
       section.appendChild(createPrintAnswerItem(entry.label, entry.body));
     });
 
-    if (!section.querySelector(".print-answer-item")) {
-      const subsections = collectSubsectionHeadingsInRange(root, heading, nextHeading);
-      if (subsections.length) {
-        subsections.forEach((subheading) => {
-          itemCount += 1;
-          section.appendChild(
-            createPrintAnswerItem((subheading.textContent || "").trim(), "暂无答案"),
-          );
-        });
-      } else {
-        itemCount += 1;
-        section.appendChild(createPrintAnswerItem("", "暂无答案", { emptySection: true }));
-      }
+    if (section.querySelector(".print-answer-item")) {
+      appendix.appendChild(section);
     }
-
-    appendix.appendChild(section);
   });
 
   return itemCount > 0 ? appendix : null;

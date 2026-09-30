@@ -31,6 +31,7 @@
 
 - 原题区域**不显示**答案（填空、解析、选择题标记均隐藏）
 - 文档末尾自动生成「答案」附录，按大题/小题编号整理
+- 只收录原试卷实际提供的答案，保留原题号；无答案的题目和大题不生成占位条目，整卷无答案时不追加附录页
 - 与主站 `ExamToolbar` 的打印样式兼容（扩展 CSS 优先级更高）
 
 ## 支持的页面
@@ -95,6 +96,7 @@ npm run package  # 构建并打包 release/byrdocs-wiki-print-v<version>.zip
 ```bash
 npx --yes --package @playwright/cli playwright-cli open about:blank
 npm run check:print
+npm run check:appendix # 无答案、部分答案及题号回归验证
 # 也可验证本地 byrdocs-neowiki（先在该仓库启动 npm run dev）
 node scripts/check-print.mjs 'http://127.0.0.1:4321/exam/24-25-1-数据结构-期末/'
 ```
@@ -145,6 +147,11 @@ PR 也会打包并上传 artifact，但不会创建 Release。
 | `#examToolbarActions` | 打印按钮默认停靠位置 |
 
 主站 [byrdocs-neowiki](https://github.com/byrdocs/byrdocs-neowiki) 的 DOM 或打印逻辑发生较大变更时，可能需要更新扩展。
+
+## 0.1.2 修复
+
+- 修复未提供答案的试卷仍生成多页「暂无答案」附录的问题。附录只收录已有答案，跳过空大题，保留原题号。
+- 新增截图对应试卷及部分答案、解析编号、空答案组件、图形答案的回归检查。
 
 ## 0.1.1 兼容更新
 

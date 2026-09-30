@@ -103,10 +103,6 @@
     margin: 0 0 0.45em;
   }
 
-  html[data-bdwp-print-active="true"] .print-answer-item.is-section-empty {
-    grid-template-columns: 1fr;
-  }
-
   html[data-bdwp-print-active="true"] .print-answer-label {
     font-weight: 600;
     line-height: 1.7;
