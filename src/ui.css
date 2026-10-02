@@ -210,3 +210,19 @@ html.dark .bdwp-print-dialog-btn-primary {
     display: none !important;
   }
 }
+
+.bdwp-update-notice:not([hidden]) {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #166534;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-top: 1rem;
+  padding: 0.65rem 0.8rem;
+}
+.bdwp-update-notice p { margin: 0 0 0.3rem; font-weight: 600; }
+.bdwp-update-notice a { color: #166534; margin-right: 1rem; text-decoration: underline; }
+.bdwp-update-notice small { display: block; margin-top: 0.35rem; }
+html.dark .bdwp-update-notice:not([hidden]) { background: #142d24; border-color: #356b52; color: #bbf7d0; }
+html.dark .bdwp-update-notice a { color: #bbf7d0; }

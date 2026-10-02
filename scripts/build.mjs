@@ -1,5 +1,5 @@
 import * as esbuild from "esbuild";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,7 +15,6 @@ const staticFiles = [
   join("src", "ui.css"),
   join("src", "print.css"),
   join("options", "options.html"),
-  join("options", "options.js"),
 ];
 
 for (const file of staticFiles) {
@@ -24,8 +23,8 @@ for (const file of staticFiles) {
 }
 
 const ctx = await esbuild.context({
-  entryPoints: [join(root, "src", "content.ts")],
-  outfile: join(dist, "content.js"),
+  entryPoints: ["content", "background", "options"].map(name => join(root, "src", `${name}.ts`)),
+  outdir: dist,
   bundle: true,
   format: "iife",
   target: "chrome109",

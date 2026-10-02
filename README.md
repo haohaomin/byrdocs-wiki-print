@@ -1,7 +1,7 @@
 # BYR Docs Wiki Print
 
-[![Release](https://img.shields.io/github/v/release/renhao12356578/byrdocs-wiki-print?label=Release)](https://github.com/renhao12356578/byrdocs-wiki-print/releases/latest)
-[![Build](https://github.com/renhao12356578/byrdocs-wiki-print/actions/workflows/build.yml/badge.svg)](https://github.com/renhao12356578/byrdocs-wiki-print/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/haohaomin/byrdocs-wiki-print?label=Release)](https://github.com/haohaomin/byrdocs-wiki-print/releases/latest)
+[![Build](https://github.com/haohaomin/byrdocs-wiki-print/actions/workflows/build.yml/badge.svg)](https://github.com/haohaomin/byrdocs-wiki-print/actions/workflows/build.yml)
 
 为 [BYR Docs 维基真题](https://wiki.byrdocs.org) 试卷页提供打印选项的浏览器扩展，**无需修改或部署主站**即可使用。
 
@@ -14,6 +14,7 @@
 | 答案位置 | **默认统一放在文档末尾**（附录页）；也可选「放在原题位置」内联显示 |
 | 试题概要 | 右侧「试题信息」卡片，**默认不打印** |
 | 接管打印 | **默认开启**：拦截快捷键与主站 `#examPrint`，避免两个打印对话框冲突 |
+| 更新提醒 | 自动检查 GitHub 正式版本，发现新版后在打印窗口提示；设置页支持手动检查与下载 |
 | 打印排版 | 自动隐藏导航、工具栏、相关试卷、主站打印页脚等无关内容 |
 
 ## 打印选项默认值
@@ -44,15 +45,15 @@
 
 ### 从 Release 安装（推荐）
 
-1. **[下载最新版 zip](https://github.com/renhao12356578/byrdocs-wiki-print/releases/latest/download/byrdocs-wiki-print.zip)**（一键下载，文件名固定）
+1. **[下载最新版 zip](https://github.com/haohaomin/byrdocs-wiki-print/releases/latest/download/byrdocs-wiki-print.zip)**（一键下载，文件名固定）
 2. 解压后在 Chrome → `chrome://extensions/` → 开发者模式 → **加载已解压的扩展程序** → 选择解压目录
 
-也可前往 [Releases 页面](https://github.com/renhao12356578/byrdocs-wiki-print/releases) 查看版本说明与带版本号的安装包。
+也可前往 [Releases 页面](https://github.com/haohaomin/byrdocs-wiki-print/releases) 查看版本说明与带版本号的安装包。
 
 ### 本地构建
 
 ```bash
-git clone https://github.com/renhao12356578/byrdocs-wiki-print.git
+git clone https://github.com/haohaomin/byrdocs-wiki-print.git
 cd byrdocs-wiki-print
 npm install
 npm run build
@@ -81,10 +82,21 @@ Firefox：`about:debugging` →「临时载入附加组件」→ 选择 `dist/ma
 
 两处设置同步，保存在 `chrome.storage.local`。
 
+## 更新提醒
+
+从 v0.1.3 起，扩展会在安装、浏览器启动、打开试卷页及后台定时任务中检查 GitHub 最新正式版本。正常检查间隔为 24 小时，多个页面共用缓存；网络失败后约一小时重试，不影响打印。
+
+- 有新版时，打印对话框会显示版本号、「下载新版」和「版本说明」。
+- 右键扩展图标 → **选项**，可查看当前版本、上次成功检查时间，并手动检查（间隔至少一分钟）。
+- 下载 ZIP 后，解压覆盖原安装目录，在扩展管理页点「重新加载」，再刷新试卷页。
+- **仅提醒，不会自动下载或安装。** 已安装的旧版需先手动升级到 v0.1.3，才能收到后续更新提示。
+- 检查仅读取 GitHub 的公开版本信息，不上传试题内容或答题记录。新增 `alarms` 定时权限，以及 `api.github.com` / `github.com` 访问权限。API 限流或不可用时，会通过公开 Releases 页的跳转检查版本，并引导到发布页下载。
+
 ## 开发
 
 ```bash
 npm run check    # TypeScript 类型检查
+npm test         # 更新逻辑与后台事件回归测试
 npm run watch    # 监听源码，自动构建到 dist/
 npm run package  # 构建并打包 release/byrdocs-wiki-print-v<version>.zip
 ```
@@ -96,6 +108,7 @@ npm run package  # 构建并打包 release/byrdocs-wiki-print-v<version>.zip
 ```bash
 npx --yes --package @playwright/cli playwright-cli open about:blank
 npm run check:print
+node scripts/check-update-ui.mjs # 更新提示及设置页验证（模拟版本响应）
 npm run check:appendix # 无答案、部分答案及题号回归验证
 # 也可验证本地 byrdocs-neowiki（先在该仓库启动 npm run dev）
 node scripts/check-print.mjs 'http://127.0.0.1:4321/exam/24-25-1-数据结构-期末/'
@@ -107,6 +120,10 @@ node scripts/check-print.mjs 'http://127.0.0.1:4321/exam/24-25-1-数据结构-�
 
 ```
 src/
+  background.ts     # GitHub 版本检查与定时任务
+  updates.ts        # 版本比较、检查缓存与请求节流
+  update-notice.ts   # 打印对话框新版提示
+  options.ts        # 设置页与手动检查更新
   content.ts        # 入口：检测试卷页、挂载打印功能
   print.ts          # 打印对话框、beforeprint/afterprint 逻辑
   print-appendix.ts # 答案附录生成
@@ -126,7 +143,7 @@ dist/               # 构建产物（加载此目录）
 1. 运行 `npm run package` 构建 zip
 2. 创建/更新 GitHub Release（标签 `v<version>`，与 `package.json` 版本一致）
 3. 上传两个安装包：
-   - `byrdocs-wiki-print.zip` — 固定文件名，适合 [latest 一键下载](https://github.com/renhao12356578/byrdocs-wiki-print/releases/latest/download/byrdocs-wiki-print.zip)
+   - `byrdocs-wiki-print.zip` — 固定文件名，适合 [latest 一键下载](https://github.com/haohaomin/byrdocs-wiki-print/releases/latest/download/byrdocs-wiki-print.zip)
    - `byrdocs-wiki-print-v<version>.zip` — 带版本号，便于归档
 
 PR 也会打包并上传 artifact，但不会创建 Release。
@@ -147,6 +164,12 @@ PR 也会打包并上传 artifact，但不会创建 Release。
 | `#examToolbarActions` | 打印按钮默认停靠位置 |
 
 主站 [byrdocs-neowiki](https://github.com/byrdocs/byrdocs-neowiki) 的 DOM 或打印逻辑发生较大变更时，可能需要更新扩展。
+
+## 0.1.3 更新提醒
+
+- 新增 GitHub 最新正式版本自动检查、打印窗口更新提示和设置页手动检查。
+- 正常每天检查一次，网络失败时保留已知版本并稍后重试。
+- 下载后仍需手动替换目录并重新加载扩展。
 
 ## 0.1.2 修复
 

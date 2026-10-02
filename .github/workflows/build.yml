@@ -33,6 +33,9 @@ jobs:
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
+      - name: Typecheck and test
+        run: npm run check && npm test
+
       - name: Build and package
         run: npm run package
 

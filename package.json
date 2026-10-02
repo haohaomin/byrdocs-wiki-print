@@ -1,6 +1,6 @@
 {
   "name": "byrdocs-wiki-print",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "Browser extension that adds print options to BYR Docs Wiki exam pages.",
   "scripts": {
@@ -9,7 +9,8 @@
     "package": "node scripts/package.mjs",
     "check": "tsc --noEmit",
     "check:print": "npm run build && node scripts/check-print.mjs",
-    "check:appendix": "node scripts/check-appendix.mjs"
+    "check:appendix": "node scripts/check-appendix.mjs",
+    "test": "npm run build && node --test tests/*.test.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

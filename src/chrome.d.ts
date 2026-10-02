@@ -19,3 +19,25 @@ declare namespace chrome {
     }
   }
 }
+
+declare namespace chrome {
+  namespace runtime {
+    const id: string;
+    function getManifest(): { version: string };
+    function sendMessage(message: unknown): Promise<import("./updates").UpdateState>;
+    const onInstalled: { addListener(callback: () => void): void };
+    const onStartup: { addListener(callback: () => void): void };
+    const onMessage: {
+      addListener(callback: (
+        message: { type?: string; force?: boolean },
+        sender: { id?: string },
+        sendResponse: (response: import("./updates").UpdateState) => void,
+      ) => boolean | void): void;
+    };
+  }
+  namespace alarms {
+    function get(name: string): Promise<{ name: string } | undefined>;
+    function create(name: string, info: { periodInMinutes: number }): Promise<void> | void;
+    const onAlarm: { addListener(callback: (alarm: { name: string }) => void): void };
+  }
+}

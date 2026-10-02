@@ -1,3 +1,4 @@
+import { mountUpdateNotice } from "./update-notice";
 import { ensurePrintButtonPlacement, mountPrintButton } from "./print-button";
 import { buildPrintAnswersAppendix } from "./print-appendix";
 import { applyPrintTakeover } from "./print-takeover";
@@ -104,6 +105,8 @@ export function mountPrintFeature(): void {
 
   const dialog = createDialog();
   document.body.append(dialog);
+  const checkUpdates = mountUpdateNotice(dialog);
+  checkUpdates();
 
   const printAnswersInput = document.getElementById(
     "bdwpPrintAnswers",
@@ -158,6 +161,7 @@ export function mountPrintFeature(): void {
   };
 
   const openDialog = () => {
+    checkUpdates();
     if (printAnswersInput) printAnswersInput.checked = printWithAnswers;
     if (printInfoInput) printInfoInput.checked = printWithInfo;
     setAnswerPlacementInputs(printAnswerPlacement);

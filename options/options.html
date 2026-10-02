@@ -37,6 +37,16 @@
       margin-top: 1rem;
       min-height: 1.2em;
     }
+    .updates { border-top: 1px solid #e2e8f0; margin-top: 1.5rem; padding-top: 1rem; }
+    .updates h2 { font-size: 1rem; margin: 0 0 0.75rem; }
+    .updates p { margin: 0.5rem 0; }
+    .updates button, .updates a { margin-right: 0.8rem; }
+    .updates button { padding: 0.4rem 0.7rem; cursor: pointer; }
+    .updates a { color: #0369a1; }
+    .updates .error { color: #b45309; }
+    #updateStatus { color: #0f766e; }
+    #updateStatus.error { color: #b45309; }
+    .updates ol { color: #475569; font-size: 0.9rem; padding-left: 1.4rem; }
   </style>
 </head>
 <body>
@@ -50,6 +60,21 @@
     关闭后主站打印功能恢复原样。
   </p>
   <div id="status" class="status" aria-live="polite"></div>
+  <section class="updates" aria-labelledby="updatesTitle">
+    <h2 id="updatesTitle">版本与更新</h2>
+    <p id="currentVersion"></p>
+    <p id="updateStatus" aria-live="polite">正在读取更新状态…</p>
+    <p id="checkedAt"></p>
+    <button id="checkUpdates" type="button">检查更新</button>
+    <a id="downloadUpdate" target="_blank" rel="noopener noreferrer" hidden>下载新版</a>
+    <a id="releaseNotes" target="_blank" rel="noopener noreferrer">版本说明</a>
+    <p>每 24 小时自动检查 GitHub 正式版本，失败后约一小时重试；手动检查间隔至少一分钟。不会自动下载或安装。</p>
+    <ol>
+      <li>下载新版 ZIP，解压覆盖原安装目录。</li>
+      <li>在扩展管理页面点击本扩展的「重新加载」。</li>
+      <li>刷新已打开的试卷页面。</li>
+    </ol>
+  </section>
   <script src="options.js"></script>
 </body>
 </html>
