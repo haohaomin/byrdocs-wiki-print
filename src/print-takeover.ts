@@ -2,7 +2,7 @@ let takeoverBound = false;
 let openDialogHandler: (() => void) | null = null;
 
 function onPrintShortcut(event: KeyboardEvent): void {
-  if (!(event.ctrlKey || event.metaKey)) return;
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.repeat) return;
   if (event.key !== "p" && event.key !== "P") return;
   event.preventDefault();
   event.stopImmediatePropagation();

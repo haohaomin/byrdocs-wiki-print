@@ -1,6 +1,6 @@
 {
   "name": "byrdocs-wiki-print",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "description": "Browser extension that adds print options to BYR Docs Wiki exam pages.",
   "scripts": {

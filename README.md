@@ -33,7 +33,7 @@
 - 原题区域**不显示**答案（填空、解析、选择题标记均隐藏）
 - 文档末尾自动生成「答案」附录，按大题/小题编号整理
 - 只收录原试卷实际提供的答案，保留原题号；无答案的题目和大题不生成占位条目，整卷无答案时不追加附录页
-- 与主站 `ExamToolbar` 的打印样式兼容（扩展 CSS 优先级更高）
+- 使用独立打印副本，不改动原页面的答案状态和答题记录
 
 ## 支持的页面
 
@@ -106,7 +106,6 @@ npm run package  # 构建并打包 release/byrdocs-wiki-print-v<version>.zip
 构建后使用 Playwright CLI 在独立的测试浏览器中验证线上试卷（需要网络）：
 
 ```bash
-npx --yes --package @playwright/cli playwright-cli open about:blank
 npm run check:print
 node scripts/check-update-ui.mjs # 更新提示及设置页验证（模拟版本响应）
 npm run check:appendix # 无答案、部分答案及题号回归验证
@@ -114,7 +113,7 @@ npm run check:appendix # 无答案、部分答案及题号回归验证
 node scripts/check-print.mjs 'http://127.0.0.1:4321/exam/24-25-1-数据结构-期末/'
 ```
 
-检查脚本在 Chrome 隔离环境中提前注入扩展，验证答案置后、答案内联、不打印答案、概要开关、快捷键、重复打印事件和打印前后的答题进度恢复。截图及日志保存在 `output/playwright/`。检查使用打印媒体模拟和打印生命周期事件，不操作系统打印机。
+打印与附页检查脚本自行创建并关闭独立的 Playwright 会话，在 Chrome 隔离环境中提前注入扩展。覆盖三种答案模式、概要开关、快捷键、重复打印、取消后重试、缺图提示、原页面及答题记录不变；附页覆盖题号、小问、嵌套及倒序列表。PDF 和日志保存在 `output/playwright/`，不操作实体打印机。
 
 ### 项目结构
 
@@ -126,6 +125,7 @@ src/
   options.ts        # 设置页与手动检查更新
   content.ts        # 入口：检测试卷页、挂载打印功能
   print.ts          # 打印对话框、beforeprint/afterprint 逻辑
+  print-document.ts # 打印副本、答案选项与图片处理
   print-appendix.ts # 答案附录生成
   print-button.ts   # 可拖拽打印按钮
   print-takeover.ts # 拦截 Ctrl+P / 主站打印按钮
@@ -157,13 +157,23 @@ PR 也会打包并上传 artifact，但不会创建 Release。
 | 依赖 | 用途 |
 | --- | --- |
 | `.exam-page-main` | 判断试卷页、定位试题信息卡片 |
-| `.wiki-content` | 挂载答案附录 |
+| `.wiki-content` | 继承试卷样式，打印副本包含试题与答案附录 |
 | `#examInfoBox` / `.exam-page-main > aside` | 试题概要（线上版无 id，扩展兼容两种结构） |
 | `.exam-blank`、`.exam-solution`、`.exam-choices` | 答案收集与显示控制 |
 | `beforeprint` / `afterprint` | 在 `document_start` 注册，统一准备和恢复扩展打印状态 |
 | `#examToolbarActions` | 打印按钮默认停靠位置 |
 
 主站 [byrdocs-neowiki](https://github.com/byrdocs/byrdocs-neowiki) 的 DOM 或打印逻辑发生较大变更时，可能需要更新扩展。
+
+## 0.1.4 打印同步
+
+- 同步本地 `byrdocs-neowiki` 已验收的完整打印实现：默认文末答案、可选原题答案或无答案、概要开关及选项记忆。
+- 打印使用独立副本，保留原页面的选择、展开状态和答题记录；等待图片和字体，取消后过期任务不会再次打开打印窗口。
+- 附页保留题号、小问编号、标题层级、倒序及显式列表编号，并按原题顺序收录已有答案。
+- 保留缺图提示与页面配色；填空只绘制底部横线，正确选项使用小勾选框，关闭背景图形也能显示标记。
+- 打印对话框与网站版一致；保留插件特有的接管开关、可拖拽按钮和更新提醒。
+
+核心对应关系：`src/print-document.ts` 对应网站的 `preparePrintDocument`，`src/print-appendix.ts` 对应 `printAppendix.ts`，`src/print.css` 对应网站同名文件。插件仅增加独立命名空间、线上概要卡片兼容和隔离环境的事件接管。
 
 ## 0.1.3 更新提醒
 
